@@ -6,7 +6,9 @@
         {% block stylesheets %}{% endblock %}
     </head>
     <body>
+        <div id="App">{% spaceless %}
         {% block body %}{% endblock %}
+        {% endspaceless %}</div>
         {% block javascripts %}{% endblock %}
     </body>
 </html>
