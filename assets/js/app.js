@@ -1,14 +1,30 @@
-/*
- * Welcome to your app's main JavaScript file!
- *
- * We recommend including the built version of this JavaScript file
- * (and its CSS file) in your base layout (base.html.twig).
- */
+import {getAPIResponse} from "./services/network";
 
-// any CSS you require will output into a single css file (app.css in this case)
 require('../css/app.css');
 
-// Need jQuery? Install it with "yarn add jquery", then uncomment to require it.
-// const $ = require('jquery');
+import React, {Fragment} from 'react';
+import ReactDOM from 'react-dom';
 
-console.log('Hello Webpack Encore! Edit me in assets/js/app.js');
+class App extends React.Component {
+    state = {
+        someVar: null
+    };
+
+    componentWillMount = () => {
+        const someVar = document.getElementById('someVar');
+        this.setState({
+            someVar: someVar.innerText
+        });
+    };
+
+    render = () => {
+        return (
+            <Fragment>
+                <h3>Hello, world!</h3>
+                <p>Some variable from database: <strong id="someVar">{this.state.someVar}</strong></p>
+            </Fragment>
+        );
+    };
+}
+
+ReactDOM.hydrate(<App/>, document.getElementById('App'));
