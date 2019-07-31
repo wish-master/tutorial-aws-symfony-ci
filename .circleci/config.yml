@@ -5,16 +5,16 @@ jobs:
     steps:
       - checkout
       - run: echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-      - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID/app:dev -f Dockerfile.stg .
-      - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID/app:dev
+      - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID:dev -f Dockerfile.stg .
+      - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID:dev
 
   build-master:
     machine: true
     steps:
       - checkout
       - run: echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-      - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID/app:latest .
-      - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID/app:latest
+      - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID:latest .
+      - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID:latest
 
   deploy-stg:
     docker:
@@ -29,9 +29,9 @@ jobs:
           echo "[profile eb-cli]" > ~/.aws/config
           echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
           echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
-      - run: eb init --region EB_REGION --platform Docker EB_APP
+      - run: eb init --region eu-central-1 --platform Docker tutorial-aws-symfony-ci
       - run: cp Dockerrun.aws.stg.json Dockerrun.aws.json
-      - run: eb use EB_ENV_STG --region EB_REGION
+      - run: eb use tutorial-aws-symfony-ci-stg --region eu-central-1
       - run: eb deploy -v --staged --profile eb-cli
 
   deploy-prod:
