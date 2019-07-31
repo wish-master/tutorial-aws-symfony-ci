@@ -1,0 +1,89 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run: echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+      - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID/app:dev -f Dockerfile.stg .
+      - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID/app:dev
+
+  build-master:
+    machine: true
+    steps:
+      - checkout
+      - run: echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+      - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID/app:latest .
+      - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID/app:latest
+
+  deploy-stg:
+    docker:
+      - image: circleci/python:2.7
+    steps:
+      - checkout
+      - run: sudo pip install awsebcli --upgrade
+      - run: |
+          mkdir ~/.aws
+          touch ~/.aws/config
+          chmod 600 ~/.aws/config
+          echo "[profile eb-cli]" > ~/.aws/config
+          echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
+          echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
+      - run: eb init --region EB_REGION --platform Docker EB_APP
+      - run: cp Dockerrun.aws.stg.json Dockerrun.aws.json
+      - run: eb use EB_ENV_STG --region EB_REGION
+      - run: eb deploy -v --staged --profile eb-cli
+
+  deploy-prod:
+    docker:
+      - image: circleci/python:2.7
+    steps:
+      - checkout
+      - run: sudo pip install awsebcli --upgrade
+      - run: |
+          mkdir ~/.aws
+          touch ~/.aws/config
+          chmod 600 ~/.aws/config
+          echo "[profile eb-cli]" > ~/.aws/config
+          echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
+          echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
+      - run: |
+          mkdir ~/.elasticbeanstalk
+          touch ~/.elasticbeanstalk/config.yml
+          chmod 600 ~/.elasticbeanstalk/config.yml
+          echo "deploy:" > ~/.elasticbeanstalk/config.yml
+          echo "  artifact: Dockerrun.aws.prod.json" >> ~/.elasticbeanstalk/config.yml
+      - run: eb use mo-monitoring-prod --region eu-central-1
+      - run: eb deploy -v --staged --profile eb-cli
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore:
+                - master
+      - deploy-stg:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore:
+                - master
+
+  build-deploy:
+    jobs:
+      - build-master:
+          filters:
+            branches:
+              only:
+                - master
+      - deploy-prod:
+          requires:
+            - build-master
+          filters:
+            branches:
+              only:
+                - master
