@@ -47,13 +47,9 @@ jobs:
           echo "[profile eb-cli]" > ~/.aws/config
           echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
           echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
-      - run: |
-          mkdir ~/.elasticbeanstalk
-          touch ~/.elasticbeanstalk/config.yml
-          chmod 600 ~/.elasticbeanstalk/config.yml
-          echo "deploy:" > ~/.elasticbeanstalk/config.yml
-          echo "  artifact: Dockerrun.aws.prod.json" >> ~/.elasticbeanstalk/config.yml
-      - run: eb use mo-monitoring-prod --region eu-central-1
+      - run: eb init --region eu-central-1 --platform Docker tutorial-aws-symfony-ci
+      - run: cp Dockerrun.aws.prod.json Dockerrun.aws.json
+      - run: eb use tutorial-aws-symfony-ci-prod --region eu-central-1
       - run: eb deploy -v --staged --profile eb-cli
 
 workflows:
