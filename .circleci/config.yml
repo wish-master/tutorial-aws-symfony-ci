@@ -32,6 +32,7 @@ jobs:
           echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
           echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
       - setup_remote_docker
+      - run: eval $(aws ecr get-login --region eu-central-1 --no-include-email)
       - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID:latest .
       - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID:latest
 
