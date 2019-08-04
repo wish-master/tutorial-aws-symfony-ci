@@ -1,24 +1,42 @@
 version: 2
 jobs:
   build:
-    machine: true
+    docker:
+      - image: circleci/python:latest
     steps:
       - checkout
-      - run: echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+      - run: sudo pip install awscli --upgrade
+      - run: |
+          mkdir ~/.aws
+          touch ~/.aws/config
+          chmod 600 ~/.aws/config
+          echo "[profile eb-cli]" > ~/.aws/config
+          echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
+          echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
+      - setup_remote_docker
+      - run: eval $(aws ecr get-login --region eu-central-1 --no-include-email)
       - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID:dev -f Dockerfile.stg .
       - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID:dev
 
   build-master:
-    machine: true
+    docker:
+      - image: circleci/python:latest
     steps:
       - checkout
-      - run: echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+      - run: sudo pip install awscli --upgrade
+      - run: |
+          mkdir ~/.aws
+          touch ~/.aws/config
+          chmod 600 ~/.aws/config
+          echo "[profile eb-cli]" > ~/.aws/config
+          echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
+          echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
       - run: docker build -t $CI_REGISTRY/$CI_REGISTRY_ID:latest .
       - run: docker push $CI_REGISTRY/$CI_REGISTRY_ID:latest
 
   deploy-stg:
     docker:
-      - image: circleci/python:2.7
+      - image: circleci/python:latest
     steps:
       - checkout
       - run: sudo pip install awsebcli --upgrade
@@ -36,7 +54,7 @@ jobs:
 
   deploy-prod:
     docker:
-      - image: circleci/python:2.7
+      - image: circleci/python:latest
     steps:
       - checkout
       - run: sudo pip install awsebcli --upgrade
