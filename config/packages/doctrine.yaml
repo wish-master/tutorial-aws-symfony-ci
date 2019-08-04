@@ -3,7 +3,7 @@ doctrine:
         # configure these for your database server
         driver: 'pdo_pgsql'
         charset: utf8
-
+        server_version: 10.6
         url: '%env(resolve:DATABASE_URL)%'
     orm:
         auto_generate_proxy_classes: true
