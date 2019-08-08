@@ -39,6 +39,11 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && apt-get update -qq \
     && apt-get install -y yarn
 
-COPY ./ ./
+COPY ./package.json ./
+COPY ./yarn.lock ./
+RUN yarn
 
-RUN composer install && yarn && yarn run build
+COPY ./ ./
+COPY ./.env.prod ./.env
+
+RUN composer install && yarn run build
